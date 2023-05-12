@@ -1,0 +1,40 @@
+{
+  "name": "qa-latamfx",
+  "version": "1.0.0",
+  "description": "End-to-end tests for LatamFX/EdgeFX",
+  "main": "index.js",
+  "directories": {
+    "test": "test"
+  },
+  "scripts": {
+    "test": "cross-env TZ='America/New_York' LC_ALL=en_US mocha --timeout 30000 --reporter mochawesome",
+    "fmt": "prettier --list-different utils/**/*.js *test/**/*.js",
+    "fmt-fix": "prettier --list-different --write utils/**/*.js *test/**/*.js",
+    "lint": "eslint utils/**/*.js *test/**/*.js",
+    "lint-fix": "eslint --fix utils/**/*.js *test/**/*.js"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://bitbucket.org/edgewater/qa-latamfx.git"
+  },
+  "author": "Jonathan Abrahams",
+  "license": "ISC",
+  "homepage": "https://bitbucket.org/edgewater/qa-latamfx#readme",
+  "dependencies": {
+    "chai": "^4.3.4",
+    "chai-http": "^4.3.0",
+    "cross-env": "^7.0.3",
+    "it-each": "^0.3.0",
+    "mocha": "^9.2.0",
+    "package.json": "^0.0.0",
+    "playwright": "^1.31.1"
+  },
+  "devDependencies": {
+    "eslint": "^7.32.0",
+    "mochawesome": "^7.1.3",
+    "prettier": "^2.8.0"
+  },
+  "bugs": {
+    "url": "https://bitbucket.org/edgewater/qa-latamfx/issues"
+  }
+}
