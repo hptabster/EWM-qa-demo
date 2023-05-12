@@ -1,0 +1,5 @@
+.DS_Store
+*.png
+node_modules/
+mochawesome-report/
+**__pycache__/
