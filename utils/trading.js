@@ -75,6 +75,20 @@ async function settings(page, settingopts) {
   return await closeSettings(page);
 }
 
+async function tradingViews(page) {
+  const tradingViews = [];
+  let view;
+  while ((view = await utils.innerText(page, TRADING_VIEW))) {
+    if (tradingViews.length && view === tradingViews[0]) {
+      break;
+    }
+    tradingViews.push(view);
+    await utils.click(page, TRADING_VIEW);
+  }
+  utils.debug(`tradingViews: ${tradingViews}`);
+  return tradingViews;
+}
+
 async function selectTradingView(page, tradingView) {
   utils.debug(`selectTradingView: ${tradingView}`);
   return await utils.timer(
@@ -177,7 +191,6 @@ async function resetSymbol(page, symbol) {
 }
 
 async function selectSymbol(page, symbol) {
-  utils.debug(`selectSymbol: ${symbol}`);
   return await utils.selectSymbol(
     page,
     ".trading__header #select_symbol",
@@ -240,11 +253,13 @@ function tenorOpt(tenor) {
     : tenor.split(" ").slice(-1)[0].toLowerCase();
 }
 
-async function symbolTenorInfo(page, symbol) {
+async function instrumentInfo(page, symbol) {
   let tenorText,
-    tenorList = [];
+    views,
+    instrumentList = [];
   if (
     !(await selectSymbol(page, symbol)) ||
+    !(views = await tradingViews(page)) ||
     !(tenorText = await utils.innerText(
       page,
       ".trading__header .trading__header-left-tenor"
@@ -256,16 +271,25 @@ async function symbolTenorInfo(page, symbol) {
     .split("\n")
     .filter((val) => !val.includes("Tenor"))) {
     const maxAmount = await instrumentMaxAmount(page, symbol, tenor);
-    await fillAmount(page, TRADING_AMOUNT, 100);
-    const info = await tradingInfo(page, { timeout: 250 });
-    tenorList.push({
+    await fillAmount(page, TRADING_AMOUNT, Math.min(maxAmount, 1000000));
+    let hasBuyRate = false;
+    let hasSellRate = false;
+    for (const view of views) {
+      await selectTradingView(page, view);
+      const info = await tradingInfo(page, { timeout: 250 });
+      hasBuyRate = hasBuyRate || (info !== null && !isNaN(info[`buyPrice`]));
+      hasSellRate = hasSellRate || (info !== null && !isNaN(info[`sellPrice`]));
+    }
+    instrumentList.push({
+      symbol: symbol,
       tenor: tenor,
       maxAmount: maxAmount,
-      hasBuyRate: info !== null && !isNaN(info[`buyPrice`]),
-      hasSellRate: info !== null && !isNaN(info[`buyPrice`]),
+      hasBuyRate: hasBuyRate,
+      hasSellRate: hasSellRate,
+      views: views,
     });
   }
-  return tenorList;
+  return instrumentList;
 }
 
 async function checkCurrentTenor(page, tenor) {
@@ -857,6 +881,7 @@ module.exports = {
   closeBidOffer,
   fillAmount,
   fillPrice,
+  instrumentInfo,
   instrumentMaxAmount,
   popout,
   resetSymbol,
@@ -868,7 +893,6 @@ module.exports = {
   selectTif,
   selectTradingView,
   symbols,
-  symbolTenorInfo,
   tenorOpt,
   termSymbol,
   tierInfo,
@@ -877,5 +901,6 @@ module.exports = {
   tradingOrderFromLowerLevel,
   tradingOrderFromPrice,
   tradingSelect,
+  tradingViews,
   waitForSettings,
 };

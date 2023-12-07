@@ -17,13 +17,9 @@ function offMarketWarning() {
 
 function majorInstrument(instruments) {
   const majorPairs = [...globals.G7_PAIRS, "USD/MXN"];
-  const instrument = utils.randomElement(
+  return utils.randomElement(
     instruments.filter((i) => majorPairs.includes(i.symbol))
   );
-  return {
-    symbol: instrument.symbol,
-    tenor: utils.randomElement(instrument.tenors).tenor,
-  };
 }
 
 describe(`Trading orders tests - ${globals.URL}`, function () {
@@ -54,21 +50,15 @@ describe(`Trading orders tests - ${globals.URL}`, function () {
     expect(tradingPage).is.not.null;
     ordersPage = await orders.popout(page);
     expect(ordersPage).is.not.null;
-    this.timeout(90000);
+    this.timeout(120000);
     for (const symbol of await trading.symbols(tradingPage)) {
-      const tenors = await trading.symbolTenorInfo(tradingPage, symbol);
-      instruments.push({
-        symbol: symbol,
-        tenors: tenors,
-      });
-      const tenorsWithPrice = tenors.filter(
-        (t) => t.hasBuyRate || t.hasSellRate
+      const instrumentInfo = await trading.instrumentInfo(tradingPage, symbol);
+      instruments.push(...instrumentInfo);
+      const instrumentWithPrice = instrumentInfo.filter(
+        (i) => i.hasBuyRate || i.hasSellRate
       );
-      if (tenorsWithPrice.length) {
-        instrumentsWithPrice.push({
-          symbol: symbol,
-          tenors: tenorsWithPrice,
-        });
+      if (instrumentWithPrice.length) {
+        instrumentsWithPrice.push(...instrumentInfo);
       }
     }
 
@@ -107,6 +97,7 @@ describe(`Trading orders tests - ${globals.URL}`, function () {
     const options = { tenor: tenor, amount: amount, resetSettings: true };
 
     if (
+      !instrument.views.includes(tradingView) ||
       !(amount = await trading.tradingOrderFromPrice(
         tradingPage,
         side,
@@ -125,6 +116,7 @@ describe(`Trading orders tests - ${globals.URL}`, function () {
       tenor: tenor,
       orderType: orderType,
       tif: tif,
+      user: globals.USER,
     };
     await orders.expectOrderDetails(
       ordersPage,
@@ -151,6 +143,7 @@ describe(`Trading orders tests - ${globals.URL}`, function () {
     };
 
     if (
+      !instrument.views.includes(tradingView) ||
       !(amount = await trading.tradingOrderFromPrice(
         tradingPage,
         side,
@@ -169,6 +162,7 @@ describe(`Trading orders tests - ${globals.URL}`, function () {
       tenor: tenor,
       orderType: orderType,
       tif: tif,
+      user: globals.USER,
     };
     await orders.expectOrderDetails(
       ordersPage,
@@ -196,6 +190,7 @@ describe(`Trading orders tests - ${globals.URL}`, function () {
     };
 
     if (
+      !instrument.views.includes(tradingView) ||
       !(amount = await trading.tradingOrderFromPrice(
         tradingPage,
         side,
@@ -215,6 +210,7 @@ describe(`Trading orders tests - ${globals.URL}`, function () {
       orderType: orderType,
       tif: tif,
       termSymbol: termSymbol,
+      user: globals.USER,
     };
     await orders.expectOrderDetails(
       ordersPage,
@@ -236,6 +232,7 @@ describe(`Trading orders tests - ${globals.URL}`, function () {
     const options = { tenor: tenor, amount: amount, resetSettings: true };
 
     if (
+      !instrument.views.includes(tradingView) ||
       !(amount = await trading.tradingOrderFromPrice(
         tradingPage,
         side,
@@ -254,6 +251,7 @@ describe(`Trading orders tests - ${globals.URL}`, function () {
       tenor: tenor,
       orderType: orderType,
       tif: tif,
+      user: globals.USER,
     };
     await orders.expectOrderDetails(
       ordersPage,
@@ -275,6 +273,7 @@ describe(`Trading orders tests - ${globals.URL}`, function () {
     const options = { tenor: tenor, amount: amount, resetSettings: true };
 
     if (
+      !instrument.views.includes(tradingView) ||
       !(amount = await trading.tradingOrderFromPrice(
         tradingPage,
         side,
@@ -293,6 +292,7 @@ describe(`Trading orders tests - ${globals.URL}`, function () {
       tenor: tenor,
       orderType: orderType,
       tif: tif,
+      user: globals.USER,
     };
     await orders.expectOrderDetails(
       ordersPage,
@@ -302,7 +302,7 @@ describe(`Trading orders tests - ${globals.URL}`, function () {
     );
   });
 
-  it("Sell Top low level order - Orders", async function () {
+  it("Sell Top tier order - Orders", async function () {
     const instrument = majorInstrument(instrumentsWithPrice);
     const symbol = instrument.symbol;
     const tenor = instrument.tenor;
@@ -314,6 +314,7 @@ describe(`Trading orders tests - ${globals.URL}`, function () {
     let amount;
 
     if (
+      !instrument.views.includes(tradingView) ||
       !(amount = await trading.tradingOrderFromLowerLevel(
         tradingPage,
         side,
@@ -332,6 +333,7 @@ describe(`Trading orders tests - ${globals.URL}`, function () {
       tenor: tenor,
       orderType: orderType,
       tif: tif,
+      user: globals.USER,
     };
     await orders.expectOrderDetails(
       ordersPage,
@@ -341,7 +343,7 @@ describe(`Trading orders tests - ${globals.URL}`, function () {
     );
   });
 
-  it("Sell VWAP low level order - Orders", async function () {
+  it("Sell VWAP tier order - Orders", async function () {
     const instrument = majorInstrument(instrumentsWithPrice);
     const symbol = instrument.symbol;
     const tenor = instrument.tenor;
@@ -353,6 +355,7 @@ describe(`Trading orders tests - ${globals.URL}`, function () {
     let amount;
 
     if (
+      !instrument.views.includes(tradingView) ||
       !(amount = await trading.tradingOrderFromLowerLevel(
         tradingPage,
         side,
@@ -371,6 +374,7 @@ describe(`Trading orders tests - ${globals.URL}`, function () {
       tenor: tenor,
       orderType: orderType,
       tif: tif,
+      user: globals.USER,
     };
     await orders.expectOrderDetails(
       ordersPage,
@@ -380,7 +384,7 @@ describe(`Trading orders tests - ${globals.URL}`, function () {
     );
   });
 
-  it("Sell VWAP low level order term symbol - Orders", async function () {
+  it("Sell VWAP tier order term symbol - Orders", async function () {
     const instrument = majorInstrument(instrumentsWithPrice);
     const symbol = instrument.symbol;
     const tenor = instrument.tenor;
@@ -399,6 +403,7 @@ describe(`Trading orders tests - ${globals.URL}`, function () {
     let amount;
 
     if (
+      !instrument.views.includes(tradingView) ||
       !(amount = await trading.tradingOrderFromLowerLevel(
         tradingPage,
         side,
@@ -418,6 +423,7 @@ describe(`Trading orders tests - ${globals.URL}`, function () {
       orderType: orderType,
       tif: tif,
       termSymbol: termSymbol,
+      user: globals.USER,
     };
     await orders.expectOrderDetails(
       ordersPage,
@@ -427,7 +433,7 @@ describe(`Trading orders tests - ${globals.URL}`, function () {
     );
   });
 
-  it("Sell FOK low level order - Orders", async function () {
+  it("Sell FOK tier order - Orders", async function () {
     const instrument = majorInstrument(instrumentsWithPrice);
     const symbol = instrument.symbol;
     const tenor = instrument.tenor;
@@ -439,6 +445,7 @@ describe(`Trading orders tests - ${globals.URL}`, function () {
     let amount;
 
     if (
+      !instrument.views.includes(tradingView) ||
       !(amount = await trading.tradingOrderFromLowerLevel(
         tradingPage,
         side,
@@ -457,6 +464,7 @@ describe(`Trading orders tests - ${globals.URL}`, function () {
       tenor: tenor,
       orderType: orderType,
       tif: tif,
+      user: globals.USER,
     };
     await orders.expectOrderDetails(
       ordersPage,
@@ -466,7 +474,7 @@ describe(`Trading orders tests - ${globals.URL}`, function () {
     );
   });
 
-  it("Sell FOK low level order single click term symbol - Orders", async function () {
+  it("Sell FOK tier order single click term symbol - Orders", async function () {
     const instrument = majorInstrument(instrumentsWithPrice);
     const symbol = instrument.symbol;
     const tenor = instrument.tenor;
@@ -487,6 +495,7 @@ describe(`Trading orders tests - ${globals.URL}`, function () {
     let amount;
 
     if (
+      !instrument.views.includes(tradingView) ||
       !(amount = await trading.tradingOrderFromLowerLevel(
         tradingPage,
         side,
@@ -506,6 +515,7 @@ describe(`Trading orders tests - ${globals.URL}`, function () {
       orderType: orderType,
       tif: tif,
       termSymbol: termSymbol,
+      user: globals.USER,
     };
     await orders.expectOrderDetails(
       ordersPage,
@@ -515,7 +525,7 @@ describe(`Trading orders tests - ${globals.URL}`, function () {
     );
   });
 
-  it("Sell Market low level order - Orders", async function () {
+  it("Sell Market tier order - Orders", async function () {
     const instrument = majorInstrument(instrumentsWithPrice);
     const symbol = instrument.symbol;
     const tenor = instrument.tenor;
@@ -528,6 +538,7 @@ describe(`Trading orders tests - ${globals.URL}`, function () {
     let amount;
 
     if (
+      !instrument.views.includes(tradingView) ||
       !(amount = await trading.tradingOrderFromLowerLevel(
         tradingPage,
         side,
@@ -546,6 +557,7 @@ describe(`Trading orders tests - ${globals.URL}`, function () {
       tenor: tenor,
       orderType: orderType,
       tif: tif,
+      user: globals.USER,
     };
     await orders.expectOrderDetails(
       ordersPage,
@@ -567,6 +579,7 @@ describe(`Trading orders tests - ${globals.URL}`, function () {
     const options = { tenor: tenor, amount: amount, resetSettings: true };
 
     if (
+      !instrument.views.includes(tradingView) ||
       !(amount = await trading.tradingOrderFromPrice(
         tradingPage,
         side,
@@ -585,6 +598,7 @@ describe(`Trading orders tests - ${globals.URL}`, function () {
       tenor: tenor,
       orderType: orderType,
       tif: tif,
+      user: globals.USER,
     };
     await orders.expectOrderDetails(
       ordersPage,
@@ -606,6 +620,7 @@ describe(`Trading orders tests - ${globals.URL}`, function () {
     const options = { tenor: tenor, amount: amount, resetSettings: true };
 
     if (
+      !instrument.views.includes(tradingView) ||
       !(amount = await trading.tradingOrderFromPrice(
         tradingPage,
         side,
@@ -624,6 +639,7 @@ describe(`Trading orders tests - ${globals.URL}`, function () {
       tenor: tenor,
       orderType: orderType,
       tif: tif,
+      user: globals.USER,
     };
     await orders.expectOrderDetails(
       ordersPage,
@@ -645,6 +661,7 @@ describe(`Trading orders tests - ${globals.URL}`, function () {
     const options = { tenor: tenor, amount: amount, resetSettings: true };
 
     if (
+      !instrument.views.includes(tradingView) ||
       !(amount = await trading.tradingOrderFromPrice(
         tradingPage,
         side,
@@ -663,6 +680,7 @@ describe(`Trading orders tests - ${globals.URL}`, function () {
       tenor: tenor,
       orderType: orderType,
       tif: tif,
+      user: globals.USER,
     };
     await orders.expectOrderDetails(
       ordersPage,
@@ -691,6 +709,7 @@ describe(`Trading orders tests - ${globals.URL}`, function () {
     };
 
     if (
+      !instrument.views.includes(tradingView) ||
       !(amount = await trading.tradingOrderFromPrice(
         tradingPage,
         side,
@@ -709,6 +728,7 @@ describe(`Trading orders tests - ${globals.URL}`, function () {
       tenor: tenor,
       orderType: orderType,
       tif: tif,
+      user: globals.USER,
     };
     await orders.expectOrderDetails(
       ordersPage,
@@ -736,6 +756,7 @@ describe(`Trading orders tests - ${globals.URL}`, function () {
     };
 
     if (
+      !instrument.views.includes(tradingView) ||
       !(amount = await trading.tradingOrderFromPrice(
         tradingPage,
         side,
@@ -755,6 +776,7 @@ describe(`Trading orders tests - ${globals.URL}`, function () {
       orderType: orderType,
       tif: tif,
       termSymbol: termSymbol,
+      user: globals.USER,
     };
     await orders.expectOrderDetails(
       ordersPage,
@@ -776,6 +798,7 @@ describe(`Trading orders tests - ${globals.URL}`, function () {
     const options = { tenor: tenor, amount: amount, resetSettings: true };
 
     if (
+      !instrument.views.includes(tradingView) ||
       !(amount = await trading.tradingOrderFromPrice(
         tradingPage,
         side,
@@ -794,6 +817,7 @@ describe(`Trading orders tests - ${globals.URL}`, function () {
       tenor: tenor,
       orderType: orderType,
       tif: tif,
+      user: globals.USER,
     };
     await orders.expectOrderDetails(
       ordersPage,
@@ -803,7 +827,7 @@ describe(`Trading orders tests - ${globals.URL}`, function () {
     );
   });
 
-  it("Buy Top low level order - Orders", async function () {
+  it("Buy Top tier order - Orders", async function () {
     const instrument = majorInstrument(instrumentsWithPrice);
     const symbol = instrument.symbol;
     const tenor = instrument.tenor;
@@ -816,6 +840,7 @@ describe(`Trading orders tests - ${globals.URL}`, function () {
     let amount;
 
     if (
+      !instrument.views.includes(tradingView) ||
       !(amount = await trading.tradingOrderFromLowerLevel(
         tradingPage,
         side,
@@ -834,6 +859,7 @@ describe(`Trading orders tests - ${globals.URL}`, function () {
       tenor: tenor,
       orderType: orderType,
       tif: tif,
+      user: globals.USER,
     };
     await orders.expectOrderDetails(
       ordersPage,
@@ -843,7 +869,7 @@ describe(`Trading orders tests - ${globals.URL}`, function () {
     );
   });
 
-  it("Buy VWAP low level order - Orders", async function () {
+  it("Buy VWAP tier order - Orders", async function () {
     const instrument = majorInstrument(instrumentsWithPrice);
     const symbol = instrument.symbol;
     const tenor = instrument.tenor;
@@ -855,6 +881,7 @@ describe(`Trading orders tests - ${globals.URL}`, function () {
     let amount;
 
     if (
+      !instrument.views.includes(tradingView) ||
       !(amount = await trading.tradingOrderFromLowerLevel(
         tradingPage,
         side,
@@ -873,6 +900,7 @@ describe(`Trading orders tests - ${globals.URL}`, function () {
       tenor: tenor,
       orderType: orderType,
       tif: tif,
+      user: globals.USER,
     };
     await orders.expectOrderDetails(
       ordersPage,
@@ -882,7 +910,7 @@ describe(`Trading orders tests - ${globals.URL}`, function () {
     );
   });
 
-  it("Buy FOK low level order - Orders", async function () {
+  it("Buy FOK tier order - Orders", async function () {
     const instrument = majorInstrument(instrumentsWithPrice);
     const symbol = instrument.symbol;
     const tenor = instrument.tenor;
@@ -894,6 +922,7 @@ describe(`Trading orders tests - ${globals.URL}`, function () {
     let amount;
 
     if (
+      !instrument.views.includes(tradingView) ||
       !(amount = await trading.tradingOrderFromLowerLevel(
         tradingPage,
         side,
@@ -912,6 +941,7 @@ describe(`Trading orders tests - ${globals.URL}`, function () {
       tenor: tenor,
       orderType: orderType,
       tif: tif,
+      user: globals.USER,
     };
     await orders.expectOrderDetails(
       ordersPage,
@@ -921,7 +951,7 @@ describe(`Trading orders tests - ${globals.URL}`, function () {
     );
   });
 
-  it("Buy Market low level order - Orders", async function () {
+  it("Buy Market tier order - Orders", async function () {
     const instrument = majorInstrument(instrumentsWithPrice);
     const symbol = instrument.symbol;
     const tenor = instrument.tenor;
@@ -934,6 +964,7 @@ describe(`Trading orders tests - ${globals.URL}`, function () {
     let amount;
 
     if (
+      !instrument.views.includes(tradingView) ||
       !(amount = await trading.tradingOrderFromLowerLevel(
         tradingPage,
         side,
@@ -952,6 +983,7 @@ describe(`Trading orders tests - ${globals.URL}`, function () {
       tenor: tenor,
       orderType: orderType,
       tif: tif,
+      user: globals.USER,
     };
     await orders.expectOrderDetails(
       ordersPage,
@@ -961,7 +993,7 @@ describe(`Trading orders tests - ${globals.URL}`, function () {
     );
   });
 
-  it("Buy Market low level order term symbol - Orders", async function () {
+  it("Buy Market tier order term symbol - Orders", async function () {
     const instrument = majorInstrument(instrumentsWithPrice);
     const symbol = instrument.symbol;
     const tenor = instrument.tenor;
@@ -980,6 +1012,7 @@ describe(`Trading orders tests - ${globals.URL}`, function () {
     let amount;
 
     if (
+      !instrument.views.includes(tradingView) ||
       !(amount = await trading.tradingOrderFromLowerLevel(
         tradingPage,
         side,
@@ -999,6 +1032,7 @@ describe(`Trading orders tests - ${globals.URL}`, function () {
       orderType: orderType,
       tif: tif,
       termSymbol: termSymbol,
+      user: globals.USER,
     };
     await orders.expectOrderDetails(
       ordersPage,
@@ -1008,7 +1042,7 @@ describe(`Trading orders tests - ${globals.URL}`, function () {
     );
   });
 
-  it("Bid order VWAP Limit - Orders", async function () {
+  it("Bid order Limit - Orders", async function () {
     const instrument = majorInstrument(instrumentsWithPrice);
     const symbol = instrument.symbol;
     const tenor = instrument.tenor;
@@ -1039,6 +1073,7 @@ describe(`Trading orders tests - ${globals.URL}`, function () {
       tenor: tenor,
       orderType: orderType,
       tif: tif,
+      user: globals.USER,
     };
     await orders.expectOrderDetails(
       ordersPage,
@@ -1048,7 +1083,7 @@ describe(`Trading orders tests - ${globals.URL}`, function () {
     );
   });
 
-  it("Bid order VWAP Limit Off market - Orders", async function () {
+  it("Bid order Limit Off market - Orders", async function () {
     if (!offMarketWarning()) {
       this.skip();
     }
@@ -1057,7 +1092,7 @@ describe(`Trading orders tests - ${globals.URL}`, function () {
     const tenor = instrument.tenor;
     const side = "BUY";
     const amount = utils.randomInteger(1, 250) * 10000;
-    const tradingView = "VWAP";
+    const tradingView = utils.randomElement(instrument.views);
     const orderType = "LIMIT";
     const tif = "GTC";
     let skip = true;
@@ -1088,7 +1123,7 @@ describe(`Trading orders tests - ${globals.URL}`, function () {
     }
   });
 
-  it("Bid order VWAP Limit Off market no cancel - Orders", async function () {
+  it("Bid order Limit Off market no cancel - Orders", async function () {
     if (!offMarketWarning()) {
       this.skip();
     }
@@ -1097,7 +1132,7 @@ describe(`Trading orders tests - ${globals.URL}`, function () {
     const tenor = instrument.tenor;
     const side = "BUY";
     const amount = utils.randomInteger(1, 250) * 10000;
-    const tradingView = "VWAP";
+    const tradingView = utils.randomElement(instrument.views);
     const orderType = "LIMIT";
     const tif = "GTC";
     let skip = true;
@@ -1133,6 +1168,7 @@ describe(`Trading orders tests - ${globals.URL}`, function () {
       tenor: tenor,
       orderType: orderType,
       tif: tif,
+      user: globals.USER,
     };
     await orders.expectOrderDetails(
       ordersPage,
@@ -1142,13 +1178,13 @@ describe(`Trading orders tests - ${globals.URL}`, function () {
     );
   });
 
-  it("Bid order VWAP Exceed Max amount", async function () {
+  it("Bid order Exceed Max amount", async function () {
     const instrument = majorInstrument(instrumentsWithPrice);
     const symbol = instrument.symbol;
     const tenor = instrument.tenor;
     const side = "BUY";
     const amount = 99000000;
-    const tradingView = "VWAP";
+    const tradingView = utils.randomElement(instrument.views);
     const orderType = "LIMIT";
     const tif = "GTC";
     const orderOptions = {
@@ -1172,13 +1208,13 @@ describe(`Trading orders tests - ${globals.URL}`, function () {
     }
   });
 
-  it("Bid order VWAP Cancel", async function () {
+  it("Bid order Cancel", async function () {
     const instrument = majorInstrument(instrumentsWithPrice);
     const symbol = instrument.symbol;
     const tenor = instrument.tenor;
     const side = "BUY";
     const amount = utils.randomInteger(1, 250) * 10000;
-    const tradingView = "VWAP";
+    const tradingView = utils.randomElement(instrument.views);
     const orderType = "LIMIT";
     const tif = "GTC";
     const orderOptions = {
@@ -1202,13 +1238,13 @@ describe(`Trading orders tests - ${globals.URL}`, function () {
     }
   });
 
-  it("Bid order MARKET Stop Loss Market - Orders", async function () {
+  it("Bid order Stop Loss Market - Orders", async function () {
     const instrument = majorInstrument(instrumentsWithPrice);
     const symbol = instrument.symbol;
     const tenor = instrument.tenor;
     const side = "BUY";
     const amount = utils.randomInteger(1, 250) * 10000;
-    const tradingView = "MARKET";
+    const tradingView = utils.randomElement(instrument.views);
     const orderType = "STOP_MARKET";
     const tif = "GTC";
     const orderOptions = { tenor: tenor, tif: tif, stopOffsetPct: -2 };
@@ -1234,6 +1270,7 @@ describe(`Trading orders tests - ${globals.URL}`, function () {
       tenor: tenor,
       orderType: orderType,
       tif: tif,
+      user: globals.USER,
     };
     await orders.expectOrderDetails(
       ordersPage,
@@ -1243,13 +1280,13 @@ describe(`Trading orders tests - ${globals.URL}`, function () {
     );
   });
 
-  it("Bid order MARKET Stop Loss Limit - Orders", async function () {
+  it("Bid order Stop Loss Limit - Orders", async function () {
     const instrument = majorInstrument(instrumentsWithPrice);
     const symbol = instrument.symbol;
     const tenor = instrument.tenor;
     const side = "BUY";
     const amount = utils.randomInteger(1, 250) * 10000;
-    const tradingView = "MARKET";
+    const tradingView = utils.randomElement(instrument.views);
     const orderType = "STOP_LIMIT";
     const tif = "GTC";
     const orderOptions = {
@@ -1280,6 +1317,7 @@ describe(`Trading orders tests - ${globals.URL}`, function () {
       tenor: tenor,
       orderType: orderType,
       tif: tif,
+      user: globals.USER,
     };
     await orders.expectOrderDetails(
       ordersPage,
@@ -1289,7 +1327,7 @@ describe(`Trading orders tests - ${globals.URL}`, function () {
     );
   });
 
-  it("Bid order MARKET Stop Loss Limit Off market - Orders", async function () {
+  it("Bid order Stop Loss Limit Off market - Orders", async function () {
     if (!offMarketWarning()) {
       this.skip();
     }
@@ -1298,7 +1336,7 @@ describe(`Trading orders tests - ${globals.URL}`, function () {
     const tenor = instrument.tenor;
     const side = "BUY";
     const amount = utils.randomInteger(1, 250) * 10000;
-    const tradingView = "MARKET";
+    const tradingView = utils.randomElement(instrument.views);
     const orderType = "STOP_LIMIT";
     const tif = "GTC";
     let skip = true;
@@ -1329,14 +1367,14 @@ describe(`Trading orders tests - ${globals.URL}`, function () {
     }
   });
 
-  it("Bid order VWAP Iceberg - Orders", async function () {
+  it("Bid order Iceberg - Orders", async function () {
     const instrument = majorInstrument(instrumentsWithPrice);
     const symbol = instrument.symbol;
     const tenor = instrument.tenor;
     const side = "BUY";
     const amount = 10000000;
     const showAmount = 1200000;
-    const tradingView = "VWAP";
+    const tradingView = utils.randomElement(instrument.views);
     const orderType = "ICEBERG";
     const tif = "GTC";
     const orderOptions = {
@@ -1366,6 +1404,7 @@ describe(`Trading orders tests - ${globals.URL}`, function () {
       tenor: tenor,
       orderType: orderType,
       tif: tif,
+      user: globals.USER,
     };
     await orders.expectOrderDetails(
       ordersPage,
@@ -1375,7 +1414,7 @@ describe(`Trading orders tests - ${globals.URL}`, function () {
     );
   });
 
-  it("Bid order VWAP Iceberg Off market - Orders", async function () {
+  it("Bid order Iceberg Off market - Orders", async function () {
     if (!offMarketWarning()) {
       this.skip();
     }
@@ -1385,7 +1424,7 @@ describe(`Trading orders tests - ${globals.URL}`, function () {
     const side = "BUY";
     const amount = 10000000;
     const showAmount = 1200000;
-    const tradingView = "VWAP";
+    const tradingView = utils.randomElement(instrument.views);
     const orderType = "ICEBERG";
     let skip = true;
     if (await trading.tradingSelect(tradingPage, symbol, tradingView, amount)) {
@@ -1415,13 +1454,13 @@ describe(`Trading orders tests - ${globals.URL}`, function () {
     }
   });
 
-  it("Bid order TOP Limit GIS - Orders", async function () {
+  it("Bid order Limit GIS - Orders", async function () {
     const instrument = majorInstrument(instrumentsWithPrice);
     const symbol = instrument.symbol;
     const tenor = instrument.tenor;
     const side = "BUY";
     const amount = utils.randomInteger(1, 250) * 10000;
-    const tradingView = "TOP";
+    const tradingView = utils.randomElement(instrument.views);
     const orderType = "LIMIT";
     const tif = "GIS";
     const orderOptions = { tenor: tenor, tif: "SESSION", rateOffsetPct: -2 };
@@ -1447,6 +1486,7 @@ describe(`Trading orders tests - ${globals.URL}`, function () {
       tenor: tenor,
       orderType: orderType,
       tif: tif,
+      user: globals.USER,
     };
     await orders.expectOrderDetails(
       ordersPage,
@@ -1456,13 +1496,13 @@ describe(`Trading orders tests - ${globals.URL}`, function () {
     );
   });
 
-  it("Offer order MARKET Limit GTT - Orders", async function () {
+  it("Offer order Limit GTT - Orders", async function () {
     const instrument = majorInstrument(instrumentsWithPrice);
     const symbol = instrument.symbol;
     const tenor = instrument.tenor;
     const side = "SELL";
     const amount = utils.randomInteger(1, 250) * 10000;
-    const tradingView = "MARKET";
+    const tradingView = utils.randomElement(instrument.views);
     const orderType = "LIMIT";
     const tif = "GTT";
     const orderOptions = {
@@ -1493,6 +1533,7 @@ describe(`Trading orders tests - ${globals.URL}`, function () {
       tenor: tenor,
       orderType: orderType,
       tif: tif,
+      user: globals.USER,
     };
     await orders.expectOrderDetails(
       ordersPage,
@@ -1502,13 +1543,13 @@ describe(`Trading orders tests - ${globals.URL}`, function () {
     );
   });
 
-  it("Offer order FOK Limit GTT Start Time - Orders", async function () {
+  it("Offer order Limit GTT Start Time - Orders", async function () {
     const instrument = majorInstrument(instrumentsWithPrice);
     const symbol = instrument.symbol;
     const tenor = instrument.tenor;
     const side = "SELL";
     const amount = utils.randomInteger(1, 250) * 10000;
-    const tradingView = "FOK";
+    const tradingView = utils.randomElement(instrument.views);
     const orderType = "LIMIT";
     const tif = "GTT";
     const orderOptions = {
@@ -1540,6 +1581,7 @@ describe(`Trading orders tests - ${globals.URL}`, function () {
       tenor: tenor,
       orderType: orderType,
       tif: tif,
+      user: globals.USER,
     };
     await orders.expectOrderDetails(
       ordersPage,
@@ -1549,13 +1591,13 @@ describe(`Trading orders tests - ${globals.URL}`, function () {
     );
   });
 
-  it("Offer order VWAP Limit - Orders", async function () {
+  it("Offer order Limit - Orders", async function () {
     const instrument = majorInstrument(instrumentsWithPrice);
     const symbol = instrument.symbol;
     const tenor = instrument.tenor;
     const side = "SELL";
     const amount = utils.randomInteger(1, 250) * 10000;
-    const tradingView = "VWAP";
+    const tradingView = utils.randomElement(instrument.views);
     const orderType = "LIMIT";
     const tif = "GTC";
     const orderOptions = { tenor: tenor, tif: tif, rateOffsetPct: 2 };
@@ -1581,6 +1623,7 @@ describe(`Trading orders tests - ${globals.URL}`, function () {
       tenor: tenor,
       orderType: orderType,
       tif: tif,
+      user: globals.USER,
     };
     await orders.expectOrderDetails(
       ordersPage,
@@ -1590,7 +1633,7 @@ describe(`Trading orders tests - ${globals.URL}`, function () {
     );
   });
 
-  it("Offer order VWAP Limit Off market - Orders", async function () {
+  it("Offer order Limit Off market - Orders", async function () {
     if (!offMarketWarning()) {
       this.skip();
     }
@@ -1599,7 +1642,7 @@ describe(`Trading orders tests - ${globals.URL}`, function () {
     const tenor = instrument.tenor;
     const side = "SELL";
     const amount = utils.randomInteger(1, 250) * 10000;
-    const tradingView = "VWAP";
+    const tradingView = utils.randomElement(instrument.views);
     const orderType = "LIMIT";
     const tif = "GTC";
     let skip = true;
@@ -1630,7 +1673,7 @@ describe(`Trading orders tests - ${globals.URL}`, function () {
     }
   });
 
-  it("Offer order VWAP Limit Off market term symbol - Orders", async function () {
+  it("Offer order Limit Off market term symbol - Orders", async function () {
     if (!offMarketWarning()) {
       this.skip();
     }
@@ -1639,7 +1682,7 @@ describe(`Trading orders tests - ${globals.URL}`, function () {
     const tenor = instrument.tenor;
     const side = "SELL";
     const amount = utils.randomInteger(1, 250) * 10000;
-    const tradingView = "VWAP";
+    const tradingView = utils.randomElement(instrument.views);
     const orderType = "LIMIT";
     const tif = "GTC";
     const options = { tenor: tenor, termSymbol: true };
@@ -1679,13 +1722,13 @@ describe(`Trading orders tests - ${globals.URL}`, function () {
     }
   });
 
-  it("Offer order VWAP Man Offset - Orders", async function () {
+  it("Offer order Man Offset - Orders", async function () {
     const instrument = majorInstrument(instrumentsWithPrice);
     const symbol = instrument.symbol;
     const tenor = instrument.tenor;
     const side = "SELL";
     const amount = utils.randomInteger(1, 250) * 10000;
-    const tradingView = "VWAP";
+    const tradingView = utils.randomElement(instrument.views);
     const orderType = "MAN_OFFSET";
     const tif = "GTC";
     const orderOptions = { tenor: tenor, tif: tif, rateOffsetPct: 2 };
@@ -1711,6 +1754,7 @@ describe(`Trading orders tests - ${globals.URL}`, function () {
       tenor: tenor,
       orderType: "LIMIT",
       tif: tif,
+      user: globals.USER,
     };
     await orders.expectOrderDetails(
       ordersPage,
@@ -1720,7 +1764,7 @@ describe(`Trading orders tests - ${globals.URL}`, function () {
     );
   });
 
-  it("Offer order VWAP Man Offset Off market - Orders", async function () {
+  it("Offer order Man Offset Off market - Orders", async function () {
     if (!offMarketWarning()) {
       this.skip();
     }
@@ -1729,7 +1773,7 @@ describe(`Trading orders tests - ${globals.URL}`, function () {
     const tenor = instrument.tenor;
     const side = "SELL";
     const amount = utils.randomInteger(1, 250) * 10000;
-    const tradingView = "VWAP";
+    const tradingView = utils.randomElement(instrument.views);
     const orderType = "MAN_OFFSET";
     const tif = "GTC";
     let skip = true;
@@ -1760,13 +1804,13 @@ describe(`Trading orders tests - ${globals.URL}`, function () {
     }
   });
 
-  it("Offer order MARKET OCO - Orders", async function () {
+  it("Offer order OCO - Orders", async function () {
     const instrument = majorInstrument(instrumentsWithPrice);
     const symbol = instrument.symbol;
     const tenor = instrument.tenor;
     const side = "BUY";
     const amount = utils.randomInteger(1, 250) * 10000;
-    const tradingView = "MARKET";
+    const tradingView = utils.randomElement(instrument.views);
     const orderType = "OCO";
     const tif = "GTC";
     const orderOptions = {
@@ -1797,6 +1841,7 @@ describe(`Trading orders tests - ${globals.URL}`, function () {
       tenor: tenor,
       orderType: orderType,
       tif: tif,
+      user: globals.USER,
     };
     await orders.expectOrderDetails(
       ordersPage,
@@ -1813,7 +1858,7 @@ describe(`Trading orders tests - ${globals.URL}`, function () {
     );
   });
 
-  it("Offer order MARKET OCO Off market - Orders", async function () {
+  it("Offer order OCO Off market - Orders", async function () {
     if (!offMarketWarning()) {
       this.skip();
     }
@@ -1822,7 +1867,7 @@ describe(`Trading orders tests - ${globals.URL}`, function () {
     const tenor = instrument.tenor;
     const side = "BUY";
     const amount = utils.randomInteger(1, 250) * 10000;
-    const tradingView = "MARKET";
+    const tradingView = utils.randomElement(instrument.views);
     const orderType = "OCO";
     const tif = "GTC";
     let skip = true;
@@ -1854,13 +1899,13 @@ describe(`Trading orders tests - ${globals.URL}`, function () {
     }
   });
 
-  it("Offer order VWAP Market - Orders", async function () {
+  it("Offer order Market - Orders", async function () {
     const instrument = majorInstrument(instrumentsWithPrice);
     const symbol = instrument.symbol;
     const tenor = instrument.tenor;
     const side = "SELL";
     const amount = utils.randomInteger(1, 250) * 10000;
-    const tradingView = "VWAP";
+    const tradingView = utils.randomElement(instrument.views);
     const orderType = "MARKET";
     const tif = "IOC";
     const options = { tenor: tenor, amount: amount };
@@ -1886,6 +1931,7 @@ describe(`Trading orders tests - ${globals.URL}`, function () {
       tenor: tenor,
       orderType: orderType,
       tif: tif,
+      user: globals.USER,
     };
     await orders.expectOrderDetails(
       ordersPage,
@@ -1901,7 +1947,7 @@ describe(`Trading orders tests - ${globals.URL}`, function () {
     const tenor = instrument.tenor;
     const side = "SELL";
     const amount = utils.randomInteger(1, 250) * 10000;
-    const tradingView = "VWAP";
+    const tradingView = utils.randomElement(instrument.views);
     const orderType = "LIMIT";
     const options = {
       tenor: tenor,
@@ -1934,7 +1980,7 @@ describe(`Trading orders tests - ${globals.URL}`, function () {
     const tenor = instrument.tenor;
     const side = "SELL";
     const amount = utils.randomInteger(1, 250) * 10000;
-    const tradingView = "VWAP";
+    const tradingView = utils.randomElement(instrument.views);
     const orderType = "LIMIT";
     let skip = true;
     if (await trading.tradingSelect(tradingPage, symbol, tradingView, amount)) {
@@ -1972,67 +2018,68 @@ describe(`Trading orders tests - ${globals.URL}`, function () {
     }
     this.timeout(240000);
     let numOrders = 0;
-    for (const { symbol, tenors } of instrumentsWithPrice) {
-      for (const tenor of tenors) {
-        const side = utils.randomElement(["BUY", "SELL"]);
-        const factor = side === "BUY" ? -1 : 1;
-        const orderOpt = {
-          side: side,
-          amount:
-            utils.randomInteger(1, 5) * Math.min(1000000, tenor.maxAmount / 5),
-          tradingView: "VWAP",
-          orderType: "LIMIT",
-          opts: {
-            tenor: tenor.tenor,
-            tif: "GTC",
-            rateOffsetPct: factor * utils.randomInteger(1, 6),
-          },
+    for (const instrument of instrumentsWithPrice) {
+      const symbol = instrument.symbol;
+      const tenor = instrument.tenor;
+      const side = utils.randomElement(["BUY", "SELL"]);
+      const factor = side === "BUY" ? -1 : 1;
+      const tradingView = utils.randomElement(instrument.views);
+      const orderOpt = {
+        side: side,
+        amount:
+          utils.randomInteger(1, 5) *
+          Math.min(1000000, instrument.maxAmount / 5),
+        tradingView: tradingView,
+        orderType: "LIMIT",
+        opts: {
+          tenor: tenor,
+          tif: "GTC",
+          rateOffsetPct: factor * utils.randomInteger(1, 6),
+        },
+      };
+      utils.debug(`Placing ${orderOpt.side} order for ${symbol} ${tenor}`);
+      if (
+        await trading.tradingOrder(
+          tradingPage,
+          orderOpt.side,
+          orderOpt.amount,
+          symbol,
+          orderOpt.tradingView,
+          orderOpt.orderType,
+          orderOpt.opts
+        )
+      ) {
+        numOrders += 1;
+        const expectOrderOptions = {
+          status: status,
+          symbol: symbol,
+          side: orderOpt.side,
+          amount: orderOpt.amount,
+          tenor: tenor,
+          orderType: orderOpt.orderType,
+          tif: orderOpt.opts.tif,
+          user: globals.USER,
         };
-        utils.debug(
-          `Placing ${orderOpt.side} order for ${symbol} ${tenor.tenor}`
-        );
-        if (
-          await trading.tradingOrder(
-            tradingPage,
-            orderOpt.side,
-            orderOpt.amount,
-            symbol,
-            orderOpt.tradingView,
-            orderOpt.orderType,
-            orderOpt.opts
-          )
-        ) {
-          numOrders += 1;
-          const expectOrderOptions = {
-            status: status,
-            symbol: symbol,
-            side: orderOpt.side,
-            amount: orderOpt.amount,
-            tenor: tenor.tenor,
-            orderType: orderOpt.orderType,
-            tif: orderOpt.opts.tif,
-          };
-          try {
-            await orders.expectOrderDetails(
-              ordersPage,
-              0,
-              prevTradeId,
-              expectOrderOptions
-            );
-            const existingOrders = await orders.ordersDetails(ordersPage);
-            prevTradeId = existingOrders.length
-              ? utils.tradeId(existingOrders[0].tradeId)
-              : 0;
-            expect(prevTradeId).to.not.equal(0);
-          } catch (err) {
-            utils.debug(`${symbol} ${tenor.tenor} order failed`);
-            errors.push(err);
-          }
-        } else {
-          utils.debug(`Skipped symbol ${symbol}, cannot place order`);
+        try {
+          await orders.expectOrderDetails(
+            ordersPage,
+            0,
+            prevTradeId,
+            expectOrderOptions
+          );
+          const existingOrders = await orders.ordersDetails(ordersPage);
+          prevTradeId = existingOrders.length
+            ? utils.tradeId(existingOrders[0].tradeId)
+            : 0;
+          expect(prevTradeId).to.not.equal(0);
+        } catch (err) {
+          utils.debug(`${symbol} ${tenor} order failed`);
+          errors.push(err);
         }
-        expect(await trading.closeBidOffer(tradingPage)).to.be.true;
+      } else {
+        utils.debug(`Skipped symbol ${symbol}, cannot place order`);
       }
+      expect(await trading.closeBidOffer(tradingPage)).to.be.true;
     }
     if (!numOrders) {
       this.skip();

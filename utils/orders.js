@@ -279,7 +279,7 @@ async function tradeId(page, idx = 1) {
       timeout: 2000,
     });
     if (bodyText && bodyText.split("\n").length > 2) {
-      return bodyText.split("\n")[2];
+      return bodyText.split("\n").slice(-1).toString();
     }
   }
   return null;
@@ -396,26 +396,38 @@ async function orderBasicDetails(page, idx) {
 
   let amount, rate;
   const lines = selectorText.split("\n");
+  const userOffset = lines.length === 3 ? 0 : 1;
+  const rateLine = 1 + userOffset;
 
-  const lMatch = lines[1].match(/ \d/);
-  let status = lines[1].split(" ")[0];
+  const lMatch = lines[rateLine].match(/ \d/);
+  let status = lines[rateLine].split(" ")[0];
   if (lMatch) {
-    status = lines[1].slice(0, lMatch.index);
-    const splitChar = lines[1].includes("@") ? "@" : "/";
-    amount = lines[1].slice(lMatch.index).split(splitChar)[0].trim();
-    rate = lines[1].slice(lMatch.index).split(splitChar)[1].trim();
+    status = lines[rateLine].slice(0, lMatch.index);
+    const splitChar = lines[rateLine].includes("@") ? "@" : "/";
+    amount = lines[rateLine].slice(lMatch.index).split(splitChar)[0].trim();
+    rate = lines[rateLine].slice(lMatch.index).split(splitChar)[1].trim();
+  }
+
+  const line0 = lines[0].split(" ");
+  let ccyVersion = "";
+  let orderType = line0.splice(-1, -2);
+  if (line0.length > 4) {
+    ccyVersion = line0.splice(-1, -2).join(" ");
+    orderType = line0.splice(3, line0.length - 3).join(" ");
   }
 
   return {
     type: BASIC,
     status: status,
-    symbol: lines[0].split(" ")[0],
-    tenor: lines[0].split(" ")[1],
-    side: lines[0].split(" ")[2],
+    symbol: line0[0],
+    tenor: line0[1],
+    side: line0[2],
     amount: amount,
     rate: rate,
-    orderType: lines[0].split(" ").splice(3).join(" "),
-    tradeId: lines[2],
+    orderType: orderType,
+    ccyVersion: ccyVersion,
+    user: userOffset === 0 ? null : lines[1].trim(),
+    tradeId: lines[2 + userOffset],
   };
 }
 
@@ -431,9 +443,21 @@ async function orderExpandedDetails(page, idx) {
     return null;
   }
   let panelHead = selectorText.split("\n")[0];
-  const symbol = panelHead.split(" ").slice(0, 3).join(" ");
-  const tenor = panelHead.split(" ").slice(3, -1).join(" ");
-  const side = panelHead.split(" ").slice(-1)[0];
+  const panelHeadParts = panelHead.split(" ");
+  const sellIdx = panelHeadParts.indexOf("BUY");
+  const buyIdx = panelHeadParts.indexOf("SELL");
+  let side = "UNKNOWN";
+  let sideIdx = 4;
+  if (sellIdx !== -1) {
+    sideIdx = sellIdx;
+    side = panelHead.split(" ")[sideIdx];
+  } else if (buyIdx !== -1) {
+    sideIdx = buyIdx;
+    side = panelHead.split(" ")[sideIdx];
+  }
+  const symbol = panelHeadParts.slice(0, 3).join(" ");
+  const tenor = panelHeadParts[3];
+  const ccyVersion = panelHeadParts.slice(sideIdx).join(" ");
 
   selector = `${orderSelector} .panel__head span span`;
   if (
@@ -472,6 +496,9 @@ async function orderExpandedDetails(page, idx) {
   }
   const orderType = selectorText.split(" ").slice(0, -1).join(" ");
   const tif = selectorText.split(" ").slice(-1)[0];
+  selector = `${orderSelector} .panel__footer span.order-user`;
+  selectorText = await utils.innerText(page, selector, { timeout: 300 });
+  const orderUser = selectorText ? selectorText.trim() : null;
 
   return {
     type: EXPANDED,
@@ -489,6 +516,8 @@ async function orderExpandedDetails(page, idx) {
     fillTime: fillTime,
     orderType: orderType,
     tif: tif,
+    ccyVersion: ccyVersion,
+    user: orderUser,
     tradeId: await tradeId(page, idx),
   };
 }
@@ -582,6 +611,12 @@ function expectDetails(orderDetail, options = {}) {
   if (orderDetail.tif) {
     expect(orderDetail.tif.toUpperCase(), errMessage).to.equal(
       options.tif.toUpperCase()
+    );
+  }
+
+  if (orderDetail.user && options.user) {
+    expect(orderDetail.user.toUpperCase(), errMessage).to.equal(
+      options.user.toUpperCase()
     );
   }
 }

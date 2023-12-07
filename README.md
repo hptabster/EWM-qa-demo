@@ -8,6 +8,7 @@ Install `Node.js` and `npm` on your computer.
 ### Install dependencies
 	npm install
 ### Run tests
+	mocha -t 60000 test/trading_widget_blotter.js
 	mocha -t 60000 test/trading_widget_orders.js
 ## To contribute tests
 Add new tests to the `tests` directory
